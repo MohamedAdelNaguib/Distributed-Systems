@@ -1,43 +1,38 @@
+"""
+Module for sending multicast 
+type broadcast to the hosts on 
+the cluster network.
+
+@Author: R. Erdem Uysal
+"""
+
+# Import necessary modules
 import socket
 import pickle
+from cluster import configs
+
+# Define broadcast adress
+broadcast_ip = configs.BROADCAST_IP
+server_address = ('', configs.BROADCAST_PORT)
+# Create a UDP socket for broadcast
+socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Bind socket to the server adress
+socket.bind(server_address)
+# Set the socket to broadcast
+socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+# Enable socket for reusing addresses
+socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 
-def send_reply(ip, port, reply_message):
-    # Create a UDP socket
-    reply_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    reply_socket.bind((ip, port))
-    reply_socket.sendto(str.encode(reply_message), (ip, port))
-    reply_socket.close()
-
-if __name__ == '__main__':
-    # Broadcast address and port
-    BROADCAST_IP = "192.168.0.255"
-    BROADCAST_PORT = 5973
-
-    # Local host information
-    MY_HOST = socket.gethostname()
-    MY_IP = socket.gethostbyname(MY_HOST)
-
-    BUFFER_SIZE = 1024
-    GROUP_VIEW = []
-    #GROUP_VIEW.append(MY_IP) if MY_IP not in GROUP_VIEW else None
-
-    # Create a UDP socket
-    listen_broadcast = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # Set the socket to broadcast and enable reusing addresses
-    listen_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    listen_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # Bind socket to address and port
-    listen_broadcast.bind((BROADCAST_IP, BROADCAST_PORT))
-
-    print("Listening to broadcast messages")
+def receive_broadcast_request():
+    """
+    Receive a broadcast message from a 
+    host in the cluster who wants to join.
+    """
 
     while True:
-        data, addr = listen_broadcast.recvfrom(BUFFER_SIZE)
-        print("Received broadcast message:", data.decode())
-        if addr[0] not in GROUP_VIEW:
-            GROUP_VIEW.append(addr[0])
-            print('New participant: ', data.split()[0].decode())
-            message = MY_IP + ' sent a reply'
-            print('Sent a reply to', addr[0], ':', BROADCAST_PORT)
-            send_reply(addr[0], BROADCAST_PORT, message)
+        try:
+            data, addr = socket.recvfrom(configs.BUFFER_SIZE)
+            print("[INFO] Receiver {configs.MY_IP}] broadcast request from {address}\n')
+        except KeyboardInterrupt:
+            print("[ERROR] UDP socket terminated...")
