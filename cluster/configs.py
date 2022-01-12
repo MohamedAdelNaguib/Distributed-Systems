@@ -12,13 +12,13 @@ import socket
 
 # Local host information
 MY_HOST = socket.gethostname()
-MY_IP = socket.gethostbyname(my_host)
+MY_IP = socket.gethostbyname(MY_HOST)
 
 # Broadcast information
 BROADCAST_IP= '192.168.0.255'
 
 # Port information
-BROADCAST_PORT = 1000
+BROADCAST_PORT = 10000
 
 # Group view information
 SERVER_LIST = []
