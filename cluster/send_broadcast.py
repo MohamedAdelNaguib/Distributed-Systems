@@ -36,23 +36,28 @@ def send_broadcast_request():
     # Format message with pickle
     broadcast_message = pickle.dumps(
         [
-            configs.SERVER_LIST,
-            configs.CLIENT_LIST,
+            configs.MY_IP
+            #configs.SERVER_LIST,
+            #configs.CLIENT_LIST,
         ]
     )
 
-    sock.sendto(broadcast_message, broadcast_adress)
-    print("[INFO] Sending broadcast request...")
-    print("[INFO] Broadcast sender: ", configs.MY_IP)
-
-    # If receive data through the socket is successfull, return true
     try:
-        data, addr = sock.recvfrom(configs.BUFFER_SIZE)
-        print("Received broadcast message:", data.decode())
-    # Otherwise, return false
-    except socket.timeout:
+        sock.sendto(broadcast_message, broadcast_adress)
+        print("[INFO] Sending broadcast request...")
+        # print("[INFO] Broadcast sender: ", configs.MY_IP)
+    except:
         pass
-        return False
+
+    while True:
+        # If receive data through the socket is successfull, return true
+        try:
+            data, addr = sock.recvfrom(configs.BUFFER_SIZE)
+            print("Received broadcast message:", data.decode())
+            return True
+        # Otherwise, return false
+        except socket.timeout:
+            return False
 
 if __name__ == '__main__':
 # Main driver 

@@ -21,8 +21,9 @@ BROADCAST_IP= '192.168.0.255'
 BROADCAST_PORT = 10000
 
 # Group view information
-SERVER_LIST = []
-CLIENT_LIST = []
+LEADER = ''  # Index 0
+SERVER_LIST = []  # Index 1
+CLIENT_LIST = []  # Index 2
 
 # Socket connection parameters
 BUFFER_SIZE = 1024
