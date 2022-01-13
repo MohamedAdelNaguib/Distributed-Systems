@@ -50,9 +50,10 @@ def send_broadcast_request():
     try:
         data, addr = sock.recvfrom(configs.BUFFER_SIZE)
         print(f"[INFO] {configs.MY_IP} received reply message from {addr}\n", file=sys.stderr)
-        print(f"[INFO] Reply message {pickle.load(data[0])}\n", file=sys.stderr)
-        configs.SERVER_LIST.append(pickle.load(data[0]))
-        print(f"[INFO] {addr[0]} has been added to the list.\n", file=sys.stderr)
+        print(f"[INFO] Reply message {pickle.loads(data[0])}\n", file=sys.stderr)
+        configs.SERVER_LIST = pickle.loads(data)[0]
+        configs.CLIENT_LIST = pickle.loads(data)[1]
+        print(f"[INFO] Group view has been updated.\n", file=sys.stderr)
         return True
 
     # Otherwise, return false
