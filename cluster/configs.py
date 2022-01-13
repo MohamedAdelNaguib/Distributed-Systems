@@ -18,7 +18,10 @@ MY_IP = socket.gethostbyname(MY_HOST)
 BROADCAST_IP= '192.168.0.255'
 
 # Port information
-BROADCAST_PORT = 10000
+# Ubiquiti UniFi access points broadcast
+# to 255.255.255.255:10001 (UDP) to locate the controller(s)
+# https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers 
+BROADCAST_PORT = 10001
 
 # Group view information
 LEADER = ''  # Index 0

@@ -13,6 +13,17 @@ import pickle
 import configs
 
 
+
+server_address = ('', configs.BROADCAST_PORT)
+# Create a UDP socket for broadcast
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Bind socket to the server adress
+sock.bind(server_address)
+# Set the socket to broadcast
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+# Enable socket for reusing addresses
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 def receive_broadcast_request():
     """
     Receive a broadcast message from a 
@@ -25,19 +36,6 @@ def receive_broadcast_request():
             print(f"[INFO] Receiver {configs.MY_IP} broadcast request from {addr}\n")
             configs.CLIENT_LIST.append(addr[0])
             
-            
-            server_address = (str(addr[0]), configs.BROADCAST_PORT)
-
-            
-            # Create a UDP socket for broadcast
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # Bind socket to the server adress
-            sock.bind(server_address)
-            # Set the socket to broadcast
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            # Enable socket for reusing addresses
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
             # print(f"[INFO] Received message: {pickle.loads(data)[0]}")
             # # Update leader of the host
             # configs.LEADER = pickle.loads(data)[0]
@@ -56,6 +54,8 @@ def receive_broadcast_request():
                     configs.CLIENT_LIST,
                 ]
             )
+
+            server_address = (str(addr[0]), configs.BROADCAST_PORT)
 
             sock.sendto(broadcast_message, server_address)
             print("[INFO] Sending group view...")
