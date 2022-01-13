@@ -48,15 +48,15 @@ def send_broadcast_request():
     except:
         pass
 
-    while True:
-        # If receive data through the socket is successfull, return true
-        try:
-            data, addr = sock.recvfrom(configs.BUFFER_SIZE)
-            print("Received broadcast message:", data.decode())
-            return True
-        # Otherwise, return false
-        except socket.timeout:
-            return False
+    # while True:
+    #     # If receive data through the socket is successfull, return true
+    #     try:
+    #         data, addr = sock.recvfrom(configs.BUFFER_SIZE)
+    #         print("Received broadcast message:", data.decode())
+    #         return True
+    #     # Otherwise, return false
+    #     except socket.timeout:
+    #         return False
 
 if __name__ == '__main__':
 # Main driver 
