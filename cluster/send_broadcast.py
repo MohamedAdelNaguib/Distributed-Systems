@@ -7,6 +7,7 @@ on the cluster network.
 """
 
 # Import necessary modules
+import sys
 import socket
 import pickle
 import time
@@ -40,23 +41,23 @@ def send_broadcast_request():
         ]
     )
 
-    try:
-        sock.sendto(broadcast_message, broadcast_adress)
-        print("[INFO] Broadcast message sent...")
-        # print("[INFO] Broadcast sender: ", configs.MY_IP)
-        time.sleep(1)
-    except:
-        pass
+    sock.sendto(broadcast_message, broadcast_adress)
+    print("[INFO] Broadcast message sent...", file=sys.stderr)
+    # print("[INFO] Broadcast sender: ", configs.MY_IP)
+    time.sleep(1)
 
-    # while True:
-    #     # If receive data through the socket is successfull, return true
-    #     try:
-    #         data, addr = sock.recvfrom(configs.BUFFER_SIZE)
-    #         print("Received broadcast message:", data.decode())
-    #         return True
-    #     # Otherwise, return false
-    #     except socket.timeout:
-    #         return False
+    # If receive data through the socket is successfull, return true
+    try:
+        data, addr = sock.recvfrom(configs.BUFFER_SIZE)
+        print(f"[INFO] {configs.MY_IP} received reply message from {addr}", file=sys.stderr)
+        print(f"[INFO] Reply message {pickle.load(data[0])}", file=sys.stderr)
+        configs.SERVER_LIST.append(pickle.load(data[0]))
+        print(f"[INFO] {addr[0]} has been added to the list.\n", file=sys.stderr)
+        return True
+
+    # Otherwise, return false
+    except socket.timeout:
+        return False
 
 if __name__ == '__main__':
 # Main driver 
