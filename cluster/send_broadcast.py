@@ -42,15 +42,15 @@ def send_broadcast_request():
     )
 
     sock.sendto(broadcast_message, broadcast_adress)
-    print("[INFO] Broadcast message sent...", file=sys.stderr)
+    print("[INFO] Broadcast message sent...\n", file=sys.stderr)
     # print("[INFO] Broadcast sender: ", configs.MY_IP)
     time.sleep(1)
 
     # If receive data through the socket is successfull, return true
     try:
         data, addr = sock.recvfrom(configs.BUFFER_SIZE)
-        print(f"[INFO] {configs.MY_IP} received reply message from {addr}", file=sys.stderr)
-        print(f"[INFO] Reply message {pickle.load(data[0])}", file=sys.stderr)
+        print(f"[INFO] {configs.MY_IP} received reply message from {addr}\n", file=sys.stderr)
+        print(f"[INFO] Reply message {pickle.load(data[0])}\n", file=sys.stderr)
         configs.SERVER_LIST.append(pickle.load(data[0]))
         print(f"[INFO] {addr[0]} has been added to the list.\n", file=sys.stderr)
         return True
