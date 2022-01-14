@@ -35,8 +35,8 @@ def receive_broadcast_request():
         try:
             data, addr = sock.recvfrom(configs.BUFFER_SIZE)
             print(f"[INFO] {configs.MY_IP} received broadcast message from {addr}.\n", file=sys.stderr)
-            configs.CLIENT_LIST.append(addr[0])
-            print(f"[INFO] {addr[0]} has been added to the list.\n", file=sys.stderr)
+            configs.CLIENT_LIST.append(addr[0]) if addr[0] not in configs.CLIENT_LIST else print()
+            print(f"[INFO] {addr[0]} has been added to the group view.\n", file=sys.stderr)
 
             # print(f"[INFO] Received message: {pickle.loads(data)[0]}")
             # # Update leader of the host
@@ -65,6 +65,6 @@ def receive_broadcast_request():
             sys.exit()
 
 
-if __name__ == '__main__':
-# Main driver 
-    receive_broadcast_request()
+# if __name__ == '__main__':
+# # Main driver 
+#     receive_broadcast_request()

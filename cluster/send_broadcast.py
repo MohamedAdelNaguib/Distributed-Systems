@@ -26,6 +26,7 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 # Define a timeout for the socket
 sock.settimeout(1)
 
+
 def send_broadcast_request():
     """
     Sends its own group view of the cluster
@@ -36,6 +37,7 @@ def send_broadcast_request():
     broadcast_message = pickle.dumps(
         [
             configs.MY_IP
+            #configs.GROUP_LEADER,
             #configs.SERVER_LIST,
             #configs.CLIENT_LIST,
         ]
@@ -60,6 +62,6 @@ def send_broadcast_request():
     except socket.timeout:
         return False
 
-if __name__ == '__main__':
-# Main driver 
-    send_broadcast_request()
+# if __name__ == '__main__':
+# # Main driver 
+#     send_broadcast_request()

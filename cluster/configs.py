@@ -24,7 +24,7 @@ BROADCAST_IP= '192.168.0.255'
 BROADCAST_PORT = 10001
 
 # Group view information
-LEADER = ''  # Index 0
+GROUP_LEADER = ''  # Index 0
 SERVER_LIST = []  # Index 1
 CLIENT_LIST = []  # Index 2
 
