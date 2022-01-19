@@ -1,6 +1,5 @@
 import socket
 import multiprocessing
-import os
 import pickle
 
 
@@ -9,8 +8,8 @@ def send_message(s_address, s_port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Message sent to server
-    # message = "get_hotels_by_name(name='A',country='Germany',city='berlin')"
-    message = "election"
+    message = "get_hotels_by_name(name='A',country='Germany',city='Stuttgart')"
+    # message = "election"
 
     # Send data
     client_socket.sendto(str.encode(message), (s_address, s_port))
@@ -24,7 +23,7 @@ def send_message(s_address, s_port):
 if __name__ == '__main__':
 
     # Server application IP address and port
-    server_address = '127.234.204.5'
+    server_address = '127.234.204.2'
     server_port = 4000
 
     for i in range(1):

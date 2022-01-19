@@ -45,10 +45,10 @@ class Server(multiprocessing.Process):
         query = self.received_data.decode().split('(')
         print("46 : " + self.received_data.decode())
         if query[0] == "get_hotels_by_name":
-            message = eval(self.received_data.decode())
+            message = eval("self." + self.received_data.decode())
             self.server_socket.sendto(pickle.dumps(message), self.client_address)
         elif query[0] == "book_room":
-            message = eval(self.received_data.decode())
+            message = eval("self." + self.received_data.decode())
             self.server_socket.sendto(pickle.dumps(message), self.client_address)
         elif query[0] == "elect":
             eval("self." + self.received_data.decode())
