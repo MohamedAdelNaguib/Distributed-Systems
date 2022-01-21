@@ -12,17 +12,21 @@ import socket
 
 # Local host information
 MY_HOST = socket.gethostname()
-MY_IP = socket.gethostbyname(my_host)
+MY_IP = socket.gethostbyname(MY_HOST)
 
 # Broadcast information
 BROADCAST_IP= '192.168.0.255'
 
 # Port information
-BROADCAST_PORT = 1000
+# Ubiquiti UniFi access points broadcast
+# to 255.255.255.255:10001 (UDP) to locate the controller(s)
+# https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers 
+BROADCAST_PORT = 10001
 
 # Group view information
-SERVER_LIST = []
-CLIENT_LIST = []
+GROUP_LEADER = ''  # Index 0
+SERVER_LIST = []  # Index 1
+CLIENT_LIST = []  # Index 2
 
 # Socket connection parameters
 BUFFER_SIZE = 1024

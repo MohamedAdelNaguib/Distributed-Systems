@@ -7,22 +7,23 @@ the cluster network.
 """
 
 # Import necessary modules
+import sys
 import socket
 import pickle
-from cluster import configs
+import configs
 
-# Define broadcast adress
-broadcast_ip = configs.BROADCAST_IP
+
 server_address = ('', configs.BROADCAST_PORT)
 # Create a UDP socket for broadcast
-socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # Bind socket to the server adress
-socket.bind(server_address)
+sock.bind(server_address)
 # Set the socket to broadcast
-socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-# Enable socket for reusing addresses
-socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+# Enable socket for reusing addresses 
+# Therefore we will be able to run multiple 
+# clients and servers on single (host, port)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 def receive_broadcast_request():
     """
@@ -32,7 +33,38 @@ def receive_broadcast_request():
 
     while True:
         try:
-            data, addr = socket.recvfrom(configs.BUFFER_SIZE)
-            print("[INFO] Receiver {configs.MY_IP}] broadcast request from {address}\n')
+            data, addr = sock.recvfrom(configs.BUFFER_SIZE)
+            print(f"[INFO] {configs.MY_IP} received broadcast message from {addr}.\n", file=sys.stderr)
+            configs.CLIENT_LIST.append(addr[0]) if addr[0] not in configs.CLIENT_LIST else print()
+            print(f"[INFO] {addr[0]} has been added to the group view.\n", file=sys.stderr)
+
+            # print(f"[INFO] Received message: {pickle.loads(data)[0]}")
+            # # Update leader of the host
+            # configs.LEADER = pickle.loads(data)[0]
+            # # Update server list of the host
+            # configs.SERVER_LIST = pickle.loads(data)[1]
+            # # Update client list of the host
+            # configs.CLIENT_LIST = pickle.loads(data)[2]
+            # print(f"[INFO] \nLeader: {configs.LEADER} \nServer list: {configs.SERVER_LIST} \nClient list: {configs.CLIENT_LIST}")
+
+
+            # Format message with pickle
+            reply_message = pickle.dumps(
+                [
+                    #configs.MY_IP
+                    configs.SERVER_LIST,
+                    configs.CLIENT_LIST,
+                ]
+            )
+
+            sock.sendto(reply_message, addr)
+            print(f"[INFO] Group view sent to {addr[0]}\n", file=sys.stderr)
+
         except KeyboardInterrupt:
-            print("[ERROR] UDP socket terminated...")
+            print("[ERROR] UDP socket terminated...", file=sys.stderr)
+            sys.exit()
+
+
+# if __name__ == '__main__':
+# # Main driver 
+#     receive_broadcast_request()
