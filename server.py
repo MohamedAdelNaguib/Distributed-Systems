@@ -51,24 +51,15 @@ class Server ():
         query = received_data.decode().split('(')
         print("54 : " + received_data.decode())
         if query[0] == "get_hotels_by_name":
-<<<<<<< HEAD
             message = eval("self." + received_data.decode())
             self.clients_socket.sendto(pickle.dumps(message), client_address)
         elif query[0] == "book_room":
             message = eval("self." + received_data.decode())
             self.clients_socket.sendto(pickle.dumps(message), client_address)
-=======
-            message = eval("self." + self.received_data.decode())
-            self.server_socket.sendto(pickle.dumps(message), self.client_address)
-        elif query[0] == "book_room":
-            message = eval("self." + self.received_data.decode())
-            self.server_socket.sendto(pickle.dumps(message), self.client_address)
->>>>>>> fd3eef44e412f68312e8e1f4c8587cb0b577da46
         elif query[0] == "elect":
             eval("self." + received_data.decode())
         elif query[0] == "election":
             self.election()
-            self.clients_socket.sendto(str.encode("The election algorithm has been started!"), client_address)
         elif query[0] == "close":
             self.clients_socket.close()
         elif query[0] == "leader":
