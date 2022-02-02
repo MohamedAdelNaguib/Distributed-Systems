@@ -1,69 +1,70 @@
-import multiprocessing
 import socket
 import db
 import json
 import pickle
+import threading
 
 
-def get_neighbour(ring, current_node_ip, direction='left'):
-    current_node_index = ring.index(current_node_ip) if current_node_ip in ring else -1
-    if current_node_index != -1:
-        if direction == 'left':
-            if current_node_index + 1 == len(ring):
-                return ring[0]
-            else:
-                return ring[current_node_index + 1]
-        else:
-            if current_node_index == 0:
-                return ring[len(ring) - 1]
-            else:
-                return ring[current_node_index - 1]
-    else:
-        return None
 
-
-class Server(multiprocessing.Process):
+class Server ():
     customers = json.loads(db.Customer)
     hotels = json.loads(db.Hotel)
     booking = json.loads(db.Booking)
     rooms = json.loads(db.Room)
-    members = ['127.234.204.3', '127.234.204.2', '127.234.204.4', '127.234.204.1', '127.234.204.5']
 
-    def __init__(self, id, server_socket, received_data, client_address):
-        super(Server, self).__init__()
-        self.id = id
-        self.server_socket = server_socket
-        self.received_data = received_data
-        self.client_address = client_address
+    def __init__(self, ID, clients_socket, members):
+        # threading.Thread.__init__(self)
+        self.ID = ID
+        self.clients_socket = clients_socket
+        # self.servers_socket = servers_socket
         self.leader = False
-        self.ring = self.form_ring()
+        self.members = members
         self.leader_id = ''
         self.participant = False
+        self.ring = self.form_ring()
 
-    # Override run method
-    def run(self):
-        query = self.received_data.decode().split('(')
-        print("46 : " + self.received_data.decode())
+    def get_neighbour(self, current_node_ip, direction='left'):
+        current_node_index = self.ring.index(current_node_ip) if current_node_ip in self.ring else -1
+        if current_node_index != -1:
+            if direction == 'left':
+                if current_node_index + 1 == len(self.ring):
+                    return self.ring[0]
+                else:
+                    return self.ring[current_node_index + 1]
+            else:
+                if current_node_index == 0:
+                    return self.ring[len(self.ring) - 1]
+                else:
+                    return self.ring[current_node_index - 1]
+        else:
+            return None
+
+    def form_ring(self):
+        if self.members:
+            sorted_binary_ring = sorted([socket.inet_aton(member) for member in self.members])
+            sorted_ip_ring = [socket.inet_ntoa(node) for node in sorted_binary_ring]
+            return sorted_ip_ring
+        else:
+            return []
+
+    def server_logic(self, received_data, client_address):
+        query = received_data.decode().split('(')
+        print("54 : " + received_data.decode())
         if query[0] == "get_hotels_by_name":
-            message = eval(self.received_data.decode())
-            self.server_socket.sendto(pickle.dumps(message), self.client_address)
+            message = eval("self." + received_data.decode())
+            self.clients_socket.sendto(pickle.dumps(message), client_address)
         elif query[0] == "book_room":
-            message = eval(self.received_data.decode())
-            self.server_socket.sendto(pickle.dumps(message), self.client_address)
+            message = eval("self." + received_data.decode())
+            self.clients_socket.sendto(pickle.dumps(message), client_address)
         elif query[0] == "elect":
-            eval("self." + self.received_data.decode())
+            eval("self." + received_data.decode())
         elif query[0] == "election":
             self.election()
-            self.server_socket.sendto(str.encode("done"), self.client_address)
-            # self.server_socket.sendto(pickle.dumps(message), self.client_address)
-        # Send message to client
-        # self.server_socket.sendto(str.encode("This is server" + str(os.getpid())),self.client_address)
-        # self.server_socket.sendto(pickle.dumps(message), self.client_address)
-
-    def election(self):
-        neighbour = get_neighbour(self.ring, self.id)
-        self.participant = True
-        self.server_socket.sendto(str.encode("elect( '" + str(self.id) + "'" + "," + "False)"), (neighbour, 4000))
+            self.clients_socket.sendto(str.encode("The election algorithm has been started!"), client_address)
+        elif query[0] == "close":
+            self.clients_socket.close()
+        elif query[0] == "leader":
+            self.clients_socket.sendto(str.encode(self.leader_id), client_address)
 
     def get_hotels_by_name(self, name=None, country=None, city=None):
         result = []
@@ -91,16 +92,6 @@ class Server(multiprocessing.Process):
                     result.append(hotel)
         return result
 
-    def form_ring(self):
-        if self.members:
-            sorted_binary_ring = sorted([socket.inet_aton(member) for member in self.members])
-            # print(sorted_binary_ring)
-            sorted_ip_ring = [socket.inet_ntoa(node) for node in sorted_binary_ring]
-            # print(sorted_ip_ring)
-            return sorted_ip_ring
-        else:
-            return []
-
     def book_room(self, room_id):
         result = []
         for room in self.rooms:
@@ -112,63 +103,66 @@ class Server(multiprocessing.Process):
                 result.append(temp)
         return result
 
-    def elect(self, id, isLeader):
-        neighbour = get_neighbour(self.ring, self.id)
+    def election(self):
+        neighbour = self.get_neighbour(self.ID)
+        print(" 107 neighbour is : " + neighbour)
+        self.participant = True
+        # print("109" + self.participant)
+        self.clients_socket.sendto(str.encode("elect('" + str(self.ID) + "'" + "," + "False)"), (neighbour, 4000))
+        print("111 done")
+
+    def elect(self, received_id, isLeader):
+        neighbour = self.get_neighbour(self.ID)
         if isLeader is True:
-            if id != self.id:
-                self.leader_id = id
-                self.participant = False
-                self.server_socket.sendto(str.encode("elect( '" + str(id) + "'" + "," + "True" + ")"),
-                                          (neighbour, 4000))
-            else:
-                self.leader_id = id
-                self.participant = False
+            print("116 here")
+            if received_id != self.ID:
+                print("118 here")
+                self.leader_id = received_id
                 print(self.leader_id)
-        if id < self.id and not self.participant:
+                self.participant = False
+                self.clients_socket.sendto(str.encode("elect('" + str(received_id) + "'" + "," + "True" + ")"),
+                                           (neighbour, 4000))
+            else:
+                leader_id = received_id
+                self.participant = False
+                return leader_id
+        elif received_id < self.ID and not self.participant:
+            print("126 received_id < ID ******************************************************")
+            print("128" +str("elect('" + str(self.ID) + "'" + "," + "False" + ")"))
             self.participant = True
-            self.server_socket.sendto(str.encode("elect( '" + str(self.id) + "'" + "," + "False" + ")"),
-                                      (neighbour, 4000))
-        elif id > self.id and not self.participant:
+            self.clients_socket.sendto(str.encode("elect('" + str(self.ID) + "'" + "," + "False" + ")"),
+                                       (neighbour, 4000))
+        elif received_id > self.ID:
+            print("133 received_id > ID ||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+            print(str("134 elect('" + str(received_id) + "'" + "," + "False" + ")"))
             self.participant = True
-            self.server_socket.sendto(str.encode("elect( '" + str(id) + "'" + "," + "False" + ")"), (neighbour, 4000))
-        elif id == self.id:
-            self.leader_id = self.id
+            self.clients_socket.sendto(str.encode("elect('" + str(received_id) + "'" + "," + "False" + ")"),
+                                       (neighbour, 4000))
+        elif received_id == self.ID:
+            print("139 received_id == ID--------------------------------------------------------")
+            print(str("140 elect('" + str(self.ID) + "'" + "," + "True" + ")"))
+            self.leader_id = self.ID
             self.participant = False
-            self.server_socket.sendto(str.encode("elect( '" + str(self.id) + "'" + "," + "True" + ")"),
-                                      (neighbour, 4000))
+            self.clients_socket.sendto(str.encode("elect('" + str(self.ID) + "'" + "," + "True" + ")"),
+                                       (neighbour, 4000))
+
 
 
 if __name__ == "__main__":
-    # Create a UDP socket
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    # Server application IP address and port
-    # server_address = '127.0.0.1'
-    server_port = 4000
-    server_address = input("Enter your value for the IP: ")
-    # print(type(server_address))
-
-    # Buffer size
-    buffer_size = 1024
-
-    # Bind socket to address and port
-    server_socket.bind((server_address, server_port))
-    print('Server up and running at {}:{}'.format(server_address, server_port))
-    # print(server_socket.gethostbyaddr(server_address))
-    i = 0
-    while True:
-        i += 1
-        # Receive message from client
-        data, address = server_socket.recvfrom(buffer_size)
-        print('Received message \'{}\' at {}:{}'.format(data.decode(), address[0], address[1]))
-        # Create a server process
-        p = Server(server_address, server_socket, data, address)
-        if (i % 10 == 0):
-            print(p.leader_id)
-        p.start()
-        p.join()
-        # print(p.ring)
-        # ne = get_neighbour(p.ring, server_address)
-        # p.server_socket.sendto(str.encode("elect(" + str(p.id) + "," + "False" + ")"), (ne, 95))
-        # if p.leader_id != '':
-        #     print(p.leader_id)
+    IP = input("Enter your value for the IP: ")
+    members = ['127.234.204.40', '127.234.204.41', '127.234.204.42']
+    clients_port = 4000
+    # servers_port = 4002
+    clients_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    clients_socket.bind((IP, clients_port))
+    print('Server up and running at {}:{}'.format(IP, clients_port))
+    my_server = Server(IP, clients_socket, members)
+    try:
+        while True:
+            # Receive message from client
+            data, address = my_server.clients_socket.recvfrom(1024)
+            print('158 : Received message \'{}\' at {}:{}'.format(data.decode(), address[0], address[1]))
+            c_thread = threading.Thread(target=my_server.server_logic,args=(data, address))
+            c_thread.start()
+    except KeyboardInterrupt:
+        my_server.clients_socket.close()
