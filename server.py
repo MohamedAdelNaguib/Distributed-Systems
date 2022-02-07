@@ -3,6 +3,9 @@ import db
 import json
 import pickle
 import threading
+import configs
+import receive_broadcast
+import send_broadcast
 
 
 
@@ -148,7 +151,9 @@ class Server ():
 
 
 if __name__ == "__main__":
-    IP = input("Enter your value for the IP: ")
+    # IP = input("Enter your value for the IP: ")
+    MY_HOST = socket.gethostname()
+    IP = socket.gethostbyname(MY_HOST)
     members = ['127.234.204.40', '127.234.204.41', '127.234.204.42']
     clients_port = 4000
     # servers_port = 4002
@@ -156,6 +161,9 @@ if __name__ == "__main__":
     clients_socket.bind((IP, clients_port))
     print('Server up and running at {}:{}'.format(IP, clients_port))
     my_server = Server(IP, clients_socket, members)
+    send_broadcast.send_broadcast_request()
+    receive_thread = threading.Thread(target=receive_broadcast.receive_broadcast_request(), args=())
+    receive_thread.start()
     try:
         while True:
             # Receive message from client
