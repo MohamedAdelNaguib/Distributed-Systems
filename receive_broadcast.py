@@ -12,7 +12,6 @@ import socket
 import pickle
 import configs
 
-
 server_address = ('', configs.BROADCAST_PORT)
 # Create a UDP socket for broadcast
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -25,6 +24,7 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 # clients and servers on single (host, port)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+
 def receive_broadcast_request():
     """
     Receive a broadcast message from a 
@@ -35,7 +35,7 @@ def receive_broadcast_request():
         try:
             data, addr = sock.recvfrom(configs.BUFFER_SIZE)
             print(f"[INFO] {configs.MY_IP} received broadcast message from {addr}.\n", file=sys.stderr)
-            configs.CLIENT_LIST.append(addr[0]) if addr[0] not in configs.CLIENT_LIST else print()
+            configs.SERVER_LIST.append(addr[0]) if addr[0] not in configs.SERVER_LIST else print()
             print(f"[INFO] {addr[0]} has been added to the group view.\n", file=sys.stderr)
 
             # print(f"[INFO] Received message: {pickle.loads(data)[0]}")
@@ -47,23 +47,22 @@ def receive_broadcast_request():
             # configs.CLIENT_LIST = pickle.loads(data)[2]
             # print(f"[INFO] \nLeader: {configs.LEADER} \nServer list: {configs.SERVER_LIST} \nClient list: {configs.CLIENT_LIST}")
 
-
             # Format message with pickle
             reply_message = pickle.dumps(
                 [
-                    #configs.MY_IP
+                    # configs.MY_IP
                     configs.SERVER_LIST,
-                    configs.CLIENT_LIST,
+                    # configs.CLIENT_LIST,
                 ]
             )
-
-            sock.sendto(reply_message, addr)
+            print(configs.SERVER_LIST)
+            if addr != configs.MY_IP :
+                sock.sendto(reply_message, addr)
             print(f"[INFO] Group view sent to {addr[0]}\n", file=sys.stderr)
 
         except KeyboardInterrupt:
             print("[ERROR] UDP socket terminated...", file=sys.stderr)
             sys.exit()
-
 
 # if __name__ == '__main__':
 # # Main driver 

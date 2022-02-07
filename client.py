@@ -32,7 +32,7 @@ def send_message(s_address, s_port):
 
 if __name__ == '__main__':
     # Server application IP address and port
-    server_address = '100.89.66.26'
+    server_address = '192.168.137.1'
     server_port = 4000
 
     for i in range(1):

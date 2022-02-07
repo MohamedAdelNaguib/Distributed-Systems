@@ -8,47 +8,21 @@ import receive_broadcast
 import send_broadcast
 
 
-
-class Server ():
+class Server():
     customers = json.loads(db.Customer)
     hotels = json.loads(db.Hotel)
     booking = json.loads(db.Booking)
     rooms = json.loads(db.Room)
 
-    def __init__(self, ID, clients_socket, members):
+    def __init__(self, ID, clients_socket):
         # threading.Thread.__init__(self)
         self.ID = ID
         self.clients_socket = clients_socket
         # self.servers_socket = servers_socket
         self.leader = False
-        self.members = members
         self.leader_id = ''
         self.participant = False
-        self.ring = self.form_ring()
-
-    def get_neighbour(self, current_node_ip, direction='left'):
-        current_node_index = self.ring.index(current_node_ip) if current_node_ip in self.ring else -1
-        if current_node_index != -1:
-            if direction == 'left':
-                if current_node_index + 1 == len(self.ring):
-                    return self.ring[0]
-                else:
-                    return self.ring[current_node_index + 1]
-            else:
-                if current_node_index == 0:
-                    return self.ring[len(self.ring) - 1]
-                else:
-                    return self.ring[current_node_index - 1]
-        else:
-            return None
-
-    def form_ring(self):
-        if self.members:
-            sorted_binary_ring = sorted([socket.inet_aton(member) for member in self.members])
-            sorted_ip_ring = [socket.inet_ntoa(node) for node in sorted_binary_ring]
-            return sorted_ip_ring
-        else:
-            return []
+        # self.ring = self.form_ring()
 
     def server_logic(self, received_data, client_address):
         query = received_data.decode().split('(')
@@ -106,7 +80,7 @@ class Server ():
         return result
 
     def election(self):
-        neighbour = self.get_neighbour(self.ID)
+        neighbour = get_neighbour(self.ID)
         print(" 107 neighbour is : " + neighbour)
         self.participant = True
         # print("109" + self.participant)
@@ -114,7 +88,7 @@ class Server ():
         print("111 done")
 
     def elect(self, received_id, isLeader):
-        neighbour = self.get_neighbour(self.ID)
+        neighbour = get_neighbour(self.ID)
         if isLeader is True:
             print("116 here")
             if received_id != self.ID:
@@ -130,7 +104,7 @@ class Server ():
                 return leader_id
         elif received_id < self.ID and not self.participant:
             print("126 received_id < ID ******************************************************")
-            print("128" +str("elect('" + str(self.ID) + "'" + "," + "False" + ")"))
+            print("128" + str("elect('" + str(self.ID) + "'" + "," + "False" + ")"))
             self.participant = True
             self.clients_socket.sendto(str.encode("elect('" + str(self.ID) + "'" + "," + "False" + ")"),
                                        (neighbour, 4000))
@@ -149,27 +123,60 @@ class Server ():
                                        (neighbour, 4000))
 
 
-
-if __name__ == "__main__":
-    # IP = input("Enter your value for the IP: ")
-    MY_HOST = socket.gethostname()
-    IP = socket.gethostbyname(MY_HOST)
-    members = ['127.234.204.40', '127.234.204.41', '127.234.204.42']
-    clients_port = 4000
-    # servers_port = 4002
-    clients_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    clients_socket.bind((IP, clients_port))
-    print('Server up and running at {}:{}'.format(IP, clients_port))
-    my_server = Server(IP, clients_socket, members)
-    send_broadcast.send_broadcast_request()
-    receive_thread = threading.Thread(target=receive_broadcast.receive_broadcast_request(), args=())
-    receive_thread.start()
+def client_handler():
     try:
         while True:
             # Receive message from client
             data, address = my_server.clients_socket.recvfrom(1024)
             print('158 : Received message \'{}\' at {}:{}'.format(data.decode(), address[0], address[1]))
-            c_thread = threading.Thread(target=my_server.server_logic,args=(data, address))
+            c_thread = threading.Thread(target=my_server.server_logic, args=(data, address))
             c_thread.start()
     except KeyboardInterrupt:
         my_server.clients_socket.close()
+
+
+def form_ring():
+    if configs.SERVER_LIST:
+        sorted_binary_ring = sorted([socket.inet_aton(member) for member in configs.SERVER_LIST])
+        sorted_ip_ring = [socket.inet_ntoa(node) for node in sorted_binary_ring]
+        return sorted_ip_ring
+    else:
+        return []
+
+
+def get_neighbour(current_node_ip, direction='left'):
+    ring = form_ring()
+    current_node_index = ring.index(current_node_ip) if current_node_ip in ring else -1
+    if current_node_index != -1:
+        if direction == 'left':
+            if current_node_index + 1 == len(ring):
+                return ring[0]
+            else:
+                return ring[current_node_index + 1]
+        else:
+            if current_node_index == 0:
+                return ring[len(ring) - 1]
+            else:
+                return ring[current_node_index - 1]
+    else:
+        return None
+
+
+if __name__ == "__main__":
+    # IP = input("Enter your value for the IP: ")
+    MY_HOST = socket.gethostname()
+    IP = socket.gethostbyname(MY_HOST)
+    # members = configs.SERVER_LIST
+    # members.append(str(IP))
+    # print(members)
+    clients_port = 4000
+    # servers_port = 4002
+    clients_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    clients_socket.bind((IP, clients_port))
+    print('Server up and running at {}:{}'.format(IP, clients_port))
+    my_server = Server(IP, clients_socket)
+    send_broadcast.send_broadcast_request()
+    client_thread = threading.Thread(target=client_handler)
+    rec_thread = threading.Thread(target=receive_broadcast.receive_broadcast_request)
+    client_thread.start()
+    rec_thread.start()
