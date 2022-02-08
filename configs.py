@@ -15,7 +15,7 @@ MY_HOST = socket.gethostname()
 MY_IP = socket.gethostbyname(MY_HOST)
 
 # Broadcast information
-BROADCAST_IP= '192.168.0.255'
+BROADCAST_IP= '192.168.137.255'
 
 # Port information
 # Ubiquiti UniFi access points broadcast
